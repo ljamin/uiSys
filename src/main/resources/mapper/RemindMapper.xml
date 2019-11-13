@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qjq.dao.RemindMapper" >
+  <resultMap id="RemindVoMap" type="com.qjq.vo.RemindVo" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="to_user_id" property="toUserId" jdbcType="VARCHAR" />
+    <result column="contentID" property="contentid" jdbcType="VARCHAR" />
+    <result column="readStatus" property="readstatus" jdbcType="INTEGER" />
+    <result property="fromUserId" column="from_user_id"/>
+    <result property="toNewsId" column="rto_news_id"/>
+    <result property="createtime" column="createTime"/>
+    <result property="content" column="rcontent"/>
+  </resultMap>
+    <resultMap id="RemindMap" type="com.qjq.po.Remind" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="to_user_id" property="toUserId" jdbcType="VARCHAR" />
+        <result column="contentID" property="contentid" jdbcType="VARCHAR" />
+        <result column="readStatus" property="readstatus" jdbcType="INTEGER" />
+        <result property="fromUserId" column="from_user_id"/>
+        <result property="createtime" column="createTime"/>
+        <result property="remindType" column="remindtype"/>
+    </resultMap>
+  <insert id="addRemind" parameterType="com.qjq.po.Remind" >
+    insert into remind (id, to_user_id,from_user_id,
+    contentID, readStatus,remindtype,createTime)
+    values (#{id,jdbcType=VARCHAR}, #{toUserId,jdbcType=VARCHAR},#{fromUserId,jdbcType=VARCHAR},
+      #{contentid,jdbcType=VARCHAR}, #{readstatus,jdbcType=INTEGER},#{remindType,jdbcType=VARCHAR},#{createtime})
+  </insert>
+  <select id="selectRemindVoByUserID" resultMap="RemindVoMap" parameterType="java.lang.String">
+     select *,comments.id as comment_id,if(remindtype=1,comments.content,'举报') as rcontent,
+     if(comments.id is null,remind.contentID,to_news_id) as rto_news_id
+     from remind left join comments on remind.contentID=comments.id
+                 where remind.to_user_id=#{userId}
+			     order by remind.createTime desc
+  </select>
+  <select id="selectRemindVoByTypeId" resultMap="RemindVoMap" parameterType="java.lang.Integer">
+     select *,comments.id as comment_id,if(remindtype=1,comments.content,'举报') as rcontent,
+     if(comments.id is null,remind.contentID,to_news_id) as rto_news_id
+     from remind left join comments on remind.contentID=comments.id
+                 where remindtype=#{typeId}
+			     order by remind.createTime desc
+  </select>
+  <delete id="deleteRemindByNewsId" parameterType="java.lang.String">
+    delete remind from remind left join comments on remind.contentID=comments.id
+                    where contentID=#{newsId} or comments.to_news_id=#{newsId}
+  </delete>
+    <select id="selectRemindById" parameterType="java.lang.String" resultMap="RemindMap">
+        select * from remind where id=#{id}
+    </select>
+    <update id="updateRemind" parameterType="com.qjq.po.Remind">
+        update remind set readStatus=#{remind.readstatus} where id=#{remind.id}
+    </update>
+
+</mapper>

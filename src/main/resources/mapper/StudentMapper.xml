@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qjq.dao.StudentMapper" >
+  <resultMap id="BaseResultMap" type="com.qjq.po.Student" >
+    <result column="id" property="id" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="institute" property="institute" jdbcType="VARCHAR" />
+  </resultMap>
+  <!--注册时根据学号姓名手机确定学生身份-->
+  <select id="findStudentByIDAndNameAndPhone" parameterType="com.qjq.po.User" resultType="com.qjq.po.User">
+    select * from student where id=#{user.id} and name=#{user.name} and phone=#{user.phone}
+  </select>
+  <insert id="insert" parameterType="com.qjq.po.Student" >
+    insert into student (id, name, phone, institute)
+    values (#{id,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, 
+      #{institute,jdbcType=VARCHAR})
+  </insert>
+  <!--Excel导入时更新数据库使用-->
+  <insert id="replaceInsertStudent" parameterType="com.qjq.po.Student">
+    replace into student (id, name, phone,
+      institute)values (#{student.id,jdbcType=VARCHAR}, #{student.name,jdbcType=VARCHAR}, #{student.phone,jdbcType=VARCHAR},
+      #{student.institute,jdbcType=VARCHAR})
+  </insert>
+  <!--删除学生信息时使用-->
+  <select id="deleteStudent" parameterType="java.lang.String" >
+    delete from student where id=#{id}
+  </select>
+  <select id="getCountofStudents" resultType="int">
+    select COUNT(*) from student
+  </select>
+  <select id="selectAllStudents" parameterType="com.qjq.po.Page" resultType="com.qjq.po.Student">
+    select * from student limit #{page.begin},#{page.pageSize};
+  </select>
+  <select id="selectStudentByID" parameterType="java.lang.String" resultType="com.qjq.po.Student">
+    select * from student where id=#{id}
+  </select>
+  <insert id="insertSelective" parameterType="com.qjq.po.Student" >
+    insert into student
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="phone != null" >
+        phone,
+      </if>
+      <if test="institute != null" >
+        institute,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="institute != null" >
+        #{institute,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+</mapper>

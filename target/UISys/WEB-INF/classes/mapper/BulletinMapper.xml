@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qjq.dao.BulletinMapper" >
+  <!--获取每页显示的公告信息-->
+  <select id="selectAllBulletins" parameterType="com.qjq.po.Page" resultMap="bulletinMap">
+    select * from bulletin order by createTime desc limit #{page.begin},#{page.pageSize};
+  </select>
+  <!--查询总行数/**/-->
+  <select id="findRows" resultType="int">
+    select COUNT(*) from bulletin;
+  </select>
+  <!--查看公告详情-->
+  <select id="selectBulletinByID" parameterType="java.lang.String" resultMap="bulletinMap">
+    select * from bulletin where id=#{id};
+  </select>
+  <resultMap id="bulletinMap" type="com.qjq.po.Bulletin">
+    <result property="fromUserId" column="from_user_id"></result>
+    <result property="createtime" column="createTime"></result>
+  </resultMap>
+  <insert id="addBulletin" parameterType="com.qjq.po.Bulletin">
+    insert into bulletin (id,title,content,from_user_id,createTime)values (#{bulletin.id},#{bulletin.title},#{bulletin.content},#{bulletin.fromUserId},#{bulletin.createtime})
+  </insert>
+    <select id="selectBulletinsByKey" parameterType="java.lang.String" resultMap="bulletinMap">
+        select * from bulletin where title like '%${key}%' or content like '%${key}%'
+    </select>
+</mapper>

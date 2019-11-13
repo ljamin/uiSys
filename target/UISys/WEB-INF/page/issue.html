@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Title</title>
+    <link rel="stylesheet" href="./static/css/font.css">
+    <link rel="stylesheet" href="./static/css/xadmin.css">
+    <script type="text/javascript" src="./static/js/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="./static/lib/layui/layui.js"></script>
+    <script type="text/javascript" src="./static/js/xadmin.js"></script>
+</head>
+<body>
+<div id="outside-title" style="text-align: center;font-size:26px;">
+    <span >发布信息</span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+</div>
+<form class="layui-form" action="./addNews.action" onsubmit="return submit_sure()"style="width: 80%">
+    <div class="layui-form-item">
+        <label class="layui-form-label">发布类别：</label>
+        <div class="layui-input-block">
+            <select name="typeId" lay-filter="" lay-verify="type">
+                <option value="">请选择</option>
+                <option value="0">社团活动</option>
+                <option value="1" >社会实践</option>
+                <option value="2">兼职信息</option>
+                <option value="3">失物招领</option>
+                <option value="4">二手交易</option>
+                <option value="5">校友party</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">标题：</label>
+        <div class="layui-input-block">
+            <input type="text" name="title"  autocomplete="off" placeholder="请输入标题" class="layui-input" lay-verify="title">
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">内容：</label>
+        <div class="layui-input-block">
+            <textarea placeholder="请输入内容" name="content" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-upload">
+        <label class="layui-form-label">图片：</label>
+        <button type="button" class="layui-btn" id="addPic">添加图片</button>
+       <!-- <label class="layui-form-label"></label>-->
+        <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 30px;">
+            预览：
+            <div class="layui-upload-list" id="pictures"></div>
+        </blockquote>
+    </div>
+    <!--隐藏区域用于保存路径至数据库-->
+    <input type="hidden" id="allPics" name="picPath" value="">
+    <div class="layui-form-item">
+        <label class="layui-form-label">文件：</label>
+        <button type="button" class="layui-btn" id="test3"><i class="layui-icon"></i>上传文件</button>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit="" type="submit">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<script>
+    layui.use('upload', function() {
+        var $ = layui.jquery
+            , upload = layui.upload;
+        //图片上传
+        upload.render({
+            elem: '#addPic'
+            , url: './upload.action'
+            , multiple: true
+            , before: function (obj) {
+                obj.preview(function (index, file, result) {
+                    $('#pictures').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
+                });
+            }
+            , done: function (res) {
+                //上传完毕回调
+               var allPics= $('#allPics').attr('value');
+                if(allPics==""){
+                    $('#allPics').attr('value',res.data.src);
+                }
+                else{
+                    allPics=allPics+","+res.data.src;
+                    $('#allPics').attr('value',allPics);
+                }
+            }
+        });
+
+    });
+    layui.use(['form', 'layedit', 'laydate'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,laydate = layui.laydate;
+
+        //日期
+        laydate.render({
+            elem: '#date'
+        });
+        laydate.render({
+            elem: '#date1'
+        });
+
+        //自定义验证规则
+        form.verify({
+            title: function(value){
+                if(value.length ==0){
+                    return '标题必填';
+                }
+            }
+            ,type: function(value){
+                if(value.length ==""){
+                    return '请选择发布类型';
+                }
+            }
+        });
+    });
+    function submit_sure() {
+        var gnl=confirm("确定要提交?");
+        if (gnl==true){
+            return true;
+        }else{
+            return false;
+        }
+        
+    }
+</script>
+</body>
+</html>

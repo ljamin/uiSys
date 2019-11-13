@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qjq.dao.NewsMapper" >
+
+  <insert id="insert" parameterType="com.qjq.po.News" >
+    insert into news (id,from_user_id,type_id,title,content,pic_path,filename,createTime,likesNum,commentsNum)
+    values (#{news.id},#{news.fromUserId},#{news.typeId},#{news.title},#{news.content},#{news.picPath},#{news.filename},#{news.createtime},#{news.likesnum},#{news.commentsnum})
+  </insert>
+
+  <select id="selectNewsByUserID" parameterType="java.lang.String" resultMap="newsMap">
+    select * from news where from_user_id=#{id} order by createTime desc
+  </select>
+
+  <select id="selectNewsByID" parameterType="java.lang.String" resultMap="newsMap">
+    select * from news where id=#{id}
+  </select>
+
+  <update id="updateNews" parameterType="com.qjq.po.News">
+    update news set likesNum=#{news.likesnum},commentsNum=#{news.commentsnum},againstNum=#{news.againstnum} where id=#{news.id}
+  </update>
+
+  <resultMap id="newsMap" type="com.qjq.po.News">
+    <result property="fromUserId" column="from_user_id"></result>
+    <result property="typeId" column="type_id"></result>
+    <result property="picPath" column="pic_path"></result>
+    <result property="likesnum" column="likesNum"></result>
+    <result property="commentsnum" column="commentsNum"></result>
+    <result property="againstnum" column="againstNum"></result>
+  </resultMap>
+
+  <select id="findRows" resultType="int">
+    select COUNT(*) from news;
+  </select>
+  <delete id="deleteNewsById" parameterType="java.lang.String">
+    delete from news where id=#{id}
+  </delete>
+
+  <select id="selectNewsVoByTypeId" parameterType="java.lang.Integer" resultMap="newsVoMap">
+    select *,user.id as user_id,comments.id as comments_id,
+                    comments.from_user_id as comments_from_user_id,
+					comments.createTime as comments_createTime,
+					comments.content as comments_content,
+					great.from_user_id as great_from_user_id
+						from news left join comments on news.id = comments.to_news_id
+						           left join user on news.from_user_id=user.id
+						          left join great on news.id=great.news_id
+						where news.type_id=#{typeId}
+						order by news.createTime desc
+  </select>
+
+  <resultMap id="newsVoMap" type="com.qjq.vo.NewsVo">
+      <id property="id" column="id"></id>
+      <result property="title" column="title"></result>
+      <result property="content" column="content"></result>
+      <result property="picPath" column="pic_path"></result>
+      <result property="commentsnum" column="commentsNum"></result>
+      <result property="filename" column="filename"></result>
+      <result property="likesnum" column="likesNum"></result>
+      <result property="againstnum" column="againstNum"></result>
+      <result property="createtime" column="createTime"></result>
+    <association property="user" javaType="com.qjq.po.User">
+      <id property="id" column="user_id"></id>
+      <result property="name" column="name"></result>
+      <result property="institute" column="institute"></result>
+      <result property="phone" column="phone"></result>
+      <result property="newsnum" column="newsNum"></result>
+      <result property="headPhoto" column="headPhoto"></result>
+      <result property="signature" column="signature"></result>
+    </association>
+    <collection property="comments" ofType="com.qjq.po.Comments" >
+      <id property="id" column="comments_id"></id>
+      <result property="fromUserId" column="comments_from_user_id"></result>
+      <result property="toUserId" column="to_user_id"></result>
+      <result property="toNewsId" column="to_news_id"></result>
+      <result property="createtime" column="comments_createTime"></result>
+      <result property="content" column="comments_content"></result>
+    </collection>
+    <collection property="greats" ofType="com.qjq.po.Great" >
+      <id property="fromUserId" column="from_user_id"></id>
+      <id property="newsId" column="greats_news_id"></id>
+    </collection>
+  </resultMap>
+
+  <select id="getCountofNewsByType" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+    select count(*) from news where type_id=#{typeId}
+  </select>
+</mapper>

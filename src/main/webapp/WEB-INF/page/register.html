@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>UISys | 同校活动互动吧</title>
+<meta name="renderer" content="webkit|ie-comp|ie-stand">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+      content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+
+<link rel="stylesheet" href="./static/css/font.css">
+<link rel="stylesheet" href="./static/css/xadmin.css">
+<link rel="stylesheet" href="./static/css/bootstrap.css">
+<script type="text/javascript" src="./static/js/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="./static/lib/layui/layui.js"></script>
+<script type="text/javascript" src="./static/js/xadmin.js"></script>
+
+</head>
+<body class="login-bg">
+<div class="login layui-anim layui-anim-up layui-form">
+    <div class="message">同校活动互动吧&nbsp&nbsp|&nbsp&nbsp注册</div>
+    <div id="darkbannerwrap"></div>
+    <form method="post">
+        <input id="id" name="id" placeholder="学号" type="text"  class="layui-input"><!--lay-verify="required"-->
+        <hr class="hr15" style="background-color: white">
+        <input id="name" name="name" placeholder="真实姓名" type="text"  class="layui-input"><!--lay-verify="required"-->
+        <hr class="hr15"style="background-color: white">
+        <input id="phone" name="phone" placeholder="预留手机号" type="text"  class="layui-input"><!--lay-verify="required"-->
+        <hr class="hr15"style="background-color: white">
+        <input id="password" name="password"  placeholder="密码" type="password" class="layui-input"lay-verify="required">
+        <hr class="hr15"style="background-color: white">
+        <input id="repassword" name="repassword"  placeholder="确认密码" type="password" class="layui-input"lay-verify="required">
+        <hr class="hr15"style="background-color: white">
+        <input id="verification" name="verification"  placeholder="验证码" type="text"
+               style="width:40%;margin-right: 20px">
+        <input class="layui-btn layui-btn-primary" id="getVerification"
+                style="height: 50px;background-color:whitesmoke;width: 150px"
+                onclick="sendMessage()"value="获取验证码" >
+
+        </input>
+        <hr class="hr15"style="background-color: white">
+    </form>
+    <input value="注册" style="width:100%;" type="submit" onclick="register()">
+    <hr class="hr15"style="background-color: white">
+    <div id="login-extra">
+        <p>已有账号？
+            <a href="./toPage.action?url=login.html">去登录</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    var InterValObj; //timer变量，控制时间
+    var count = 20; //间隔函数，1秒执行
+    var curCount;//当前剩余秒数
+    function sendMessage(){
+        var phone=$("#phone").val();
+        if(phone!=""){
+            curCount = count;
+            $("#getVerification").attr("disabled", "true");
+            $("#getVerification").val(curCount + "秒后可重新发送");
+            InterValObj = window.setInterval(SetRemainTime, 1000); //启动计时器，1秒执行一次请求后台发送验证码 TODO
+        }
+
+    }
+    //timer处理函数
+    function SetRemainTime() {
+        if (curCount == 0) {
+            window.clearInterval(InterValObj);//停止计时器
+            $("#getVerification").removeAttr("disabled");//启用按钮
+            $("#getVerification").val("重新发送验证码");
+        }
+        else {
+            curCount--;
+            $("#getVerification").val(curCount + "秒后可重新发送");
+        }
+    }
+    var sms="123";/*存放返回的验证码*/
+    $("#getVerification").click(function(){
+        var phone=$("#phone").val();
+        if(phone!="")
+        {
+            $.ajax({
+                url:"./sendSMS.action",
+                type:"post",
+                data:{"phone":phone},
+                dataType:"json",
+                success:function(result){
+                    if(result.status=="1"){
+                        //sms=result.data;
+                        sms="123";
+                    }
+                }
+            });
+        }else{
+            layer.msg("手机号不能为空", {time: 2000, icon:5,anim: 6})
+            phone.face()
+            return false;
+        }
+
+    });
+    /*判断信息是否满足，是则进入注册*/
+    function register() {
+        var id = $("#id").val();
+        var name = $("#name").val();
+        var phone = $("#phone").val();
+        var password = $("#password").val();
+        var verification = $("#verification").val()
+        var repassword = $("#repassword").val();
+
+        if (id == ""){
+            layer.msg("学号不能为空", {time: 2000, icon:5,anim: 6})
+            id.face()
+            return false;
+        }
+        if (name == ""){
+            layer.msg("姓名不能为空", {time: 2000, icon:5,anim: 6})
+            name.face()
+            return false;
+        }
+        if (phone == ""){
+            layer.msg("手机号不能为空", {time: 2000, icon:5,anim: 6})
+            phone.face()
+            return false;
+        }
+        if (password == ""){
+            layer.msg("密码不能为空", {time: 2000, icon:5,anim: 6})
+            password.face()
+            return false;
+        }
+        if (password != repassword){
+            layer.msg("两次密码不一致", {time: 2000, icon:5,anim: 6})
+            repassword.face()
+            return false;
+        }
+        if(verification==""){
+            layer.msg("验证码不能为空", {time: 2000, icon:5,anim: 6})
+            verification.face()
+            return false;
+        }else{
+            /*核对验证码是否一致*/
+            if(sms==verification){
+                $.ajax({
+                    type: 'post',
+                    url: './register.action',
+                    data: {
+                        'id': id,
+                        'name':name,
+                        'phone':phone,
+                        'password': password
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var code = data.status;
+                        if (code == "0") {
+                            /*学号或姓名或手机号不正确*/
+                            layer.msg(data.msg, {time: 3000, icon:2,anim: 6})
+                        } else if (code == "200") {
+                            alert(data.msg);
+                            window.location.href = data.url;
+                        }else if(code == "500"){
+                            /*用户已存在*/
+                            layer.msg(data.msg, {time: 3000, icon:2,anim: 6})
+                        }
+                    }
+                });
+            }else{
+                layer.msg("验证码错误", {time: 2000, icon:5,anim: 6})
+                verification.face()
+            };
+        };
+
+
+    }
+</script>
+</body>
+</html>

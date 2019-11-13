@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qjq.dao.UserMapper" >
+  <!--根据id及密码查找-->
+  <select id="selectUserByIDAndPassword" parameterType="com.qjq.po.User" resultMap="userMap">
+    select * from user where id = #{user.id} and password = #{user.password}
+  </select>
+    <resultMap id="userMap" type="com.qjq.po.User">
+        <result property="id" column="id"></result>
+        <result property="name" column="name"></result>
+        <result property="institute" column="institute"></result>
+        <result property="phone" column="phone"></result>
+        <result property="statusId" column="status_id"></result>
+        <result property="password" column="password"></result>
+        <result property="roleId" column="role_id"></result>
+        <result property="headPhoto" column="headPhoto"></result>
+        <result property="newsnum" column="newsNum"></result>
+        <result property="signature" column="signature"></result>
+        <result property="registertime" column="registerTime"></result>
+    </resultMap>
+    <!--根据id查找是否已注册-->
+    <select id="selectUserByID" parameterType="java.lang.String" resultMap="userMap">
+    select * from user where id = #{id}
+  </select>
+  <!--更新用户信息,学号姓名学院不可修改-->
+  <update id="updateUser" parameterType="com.qjq.po.User">
+    update user set phone=#{user.phone},status_id=#{user.statusId},password=#{user.password},
+                   role_id=#{user.roleId},newsNum=#{user.newsnum},signature=#{user.signature},headPhoto=#{user.headPhoto}
+                   where id=#{user.id}
+  </update>
+    <!--注册时插入user-->
+    <insert id="insertUser" parameterType="com.qjq.po.User">
+        insert into user (id,name,institute,phone,password,registerTime,status_id,role_id,newsNum,signature,headPhoto)
+                    values (#{user.id},#{user.name},#{user.institute},
+                    #{user.phone},#{user.password},#{user.registertime},
+                    #{user.statusId},#{user.roleId},#{user.newsnum},#{user.signature},#{user.headPhoto})
+    </insert>
+    <select id="getCountofUsers" resultType="java.lang.Integer">
+        select count(*) from user
+    </select>
+    <select id="selectUserByPage" parameterType="com.qjq.po.Page" resultMap="userMap">
+        select * from user limit #{page.begin},#{page.pageSize};
+    </select>
+    <delete id="deleteUserByID" parameterType="java.lang.String">
+        delete from user where id=#{id}
+    </delete>
+
+</mapper>

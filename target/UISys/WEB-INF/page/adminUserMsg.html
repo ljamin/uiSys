@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script type="text/javascript" src="./static/js/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="./static/lib/layui/layui.js"></script>
+    <link rel="stylesheet" href="./static/lib/layui/css/layui.css"  media="all">
+    <title>Title</title>
+</head>
+<body>
+<div id="outside-title" style="text-align: center;font-size:26px;">
+    <span style="text-align: center">用户信息</span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">刷新</i></a>
+</div>
+<div class="search" style="margin-left: 15px">
+    搜索ID：
+    <div class="layui-inline">
+        <input class="layui-input" name="id" id="searchId" autocomplete="off">
+    </div>
+    <button class="layui-btn" data-type="reload">搜索</button>
+</div>
+<table class="layui-hide" id="allUsers" lay-filter="allUsers" style="margin-left: 2px"></table>
+<script id="toolbar" type="text/html">
+    {{# if(d.statusId==0){}}
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="disable">禁言</a>
+    {{#  } }}
+    {{# if(d.statusId==1){}}
+    <a class="layui-btn layui-btn-xs" lay-event="edit">自由</a>
+    {{#  } }}
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">注销</a>
+</script>
+
+<script>
+    layui.use('table', function(){
+        var table = layui.table;
+        table.render({
+            elem: '#allUsers'
+            ,page: true
+            ,url:'./usersMsg.action'      //获取数据的action
+            ,cols: [[
+                {field:'id', title:'学号', width:200, fixed: 'left', unresize: true, sort: true}
+                ,{field:'name', title:'姓名', width:180}
+                ,{field:'phone', title:'手机号',edit: 'text', width:200}
+                ,{field:'institute', title:'学院',edit: 'text', width:200}
+                ,{field:'newsnum', title:'发布新闻数', width:200}
+                ,{field:'registertime', title:'注册时间', width:200}
+                ,{field:'signature', title:'个性签名', width:200}
+                ,{field:'right', title:'操作', width:220,toolbar:'#toolbar'}
+            ]]
+            ,done:function(res){
+            }
+            ,toolbar: 'default'
+            ,defaultToolbar: ['exports']
+            ,id:'reload'
+            ,skin:  'nob'    //去掉表格线
+            ,initSort: {
+                field: 'id' //排序字段，对应 cols 设定的各字段名
+                ,type: 'asc' //排序方式 : 升序
+            }
+        });
+        var $ = layui.$, active = {
+            reload: function(){
+                var searchId = $('#searchId');
+                //执行重载
+                table.reload('reload', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,where: {
+                        id: searchId.val()
+                    }
+                });
+            }
+        };
+
+        $('.search .layui-btn').on('click', function(){
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+        table.on('edit(allUsers)', function(obj){
+            console.log(obj.value); //得到修改后的值
+            console.log(obj.field); //当前编辑的字段名
+            console.log(obj.data); //所在行的所有相关数据
+            $.ajax({
+                type: 'post',
+                url: './updateUser.action',
+                data: {
+                    'id': obj.data.id,
+                    'phone': obj.data.phone,
+                    'institute': obj.data.institute
+                },
+                dataType: 'json',
+                success: function (data) {
+                    var code = data.code;
+                    if (code == "0") {
+                        layer.msg(data.msg, {time: 3000, icon:1,anim: 6});
+                    } else  {
+                        layer.msg("修改失败",{time: 3000, icon:2,anim: 6})
+                    }
+                }
+            });
+        });
+        //监听事件
+        table.on('tool(allUsers)', function(obj){ //注：tool是工具条事件名
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            var tr = obj.tr; //获得当前行 tr 的DOM对象
+
+            if(layEvent === 'disable'){ //禁言
+                layer.confirm('真的要禁言此用户吗？他/她将无法发布消息与评论。', function(index){
+                    layer.close(index);
+                    $.ajax({
+                        type: 'post',
+                        url: './disableUser.action',
+                        data: {
+                            'id': data.id,
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            var code = data.code;
+                            if (code == "0") {
+                                layer.msg(data.msg, {time: 3000, icon:1,anim: 6});
+                            } else  {
+                                layer.msg("禁言失败",{time: 3000, icon:2,anim: 6})
+                            }
+                        }
+                    });})
+            } else if(layEvent === 'del'){ //注销
+                layer.confirm('真的要注销此用户吗？他/她将无法登录，但他/她产生的记录仍在。', function(index){
+                    layer.close(index);
+                    $.ajax({
+                        type: 'post',
+                        url: './deleteUser.action',
+                        data: {
+                            'id': data.id,
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            var code = data.code;
+                            if (code == "0") {
+                                layer.msg(data.msg, {time: 3000, icon:1,anim: 6});
+                                obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+
+                            } else  {
+                                layer.msg("删除失败",{time: 3000, icon:2,anim: 6})
+                            }
+                        }
+                    });})
+            } else if(layEvent === 'free'){ //编辑
+                layer.confirm('真的要对此用户解除禁言吗？他/她将恢复发布消息与评论权利。', function(index){
+                    layer.close(index);
+                    $.ajax({
+                        type: 'post',
+                        url: './disableUser.action',
+                        data: {
+                            'id': data.id,
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            var code = data.code;
+                            if (code == "0") {
+                                layer.msg(data.msg, {time: 3000, icon:1,anim: 6});
+                            } else  {
+                                layer.msg("解除禁言失败",{time: 3000, icon:2,anim: 6})
+                            }
+                        }
+                    });})
+            }
+        });
+
+    });
+
+    layui.use('upload', function() {
+        var $ = layui.jquery
+            , upload = layui.upload;
+        upload.render({
+            elem: '#chooseFile'
+            , url: './upload.action'
+            , auto: false
+            ,accept:'file'
+            ,exts:"xlsx|xls"
+            , bindAction: '#uploadFile'
+            , done: function (res) {
+                layer.msg("上传成功，请刷新",{time: 3000, icon:1,anim: 6})
+            }
+        });
+    });
+
+
+    function detail(id){
+        //通过ajax获得bulletin详情
+        $(function() {
+            $.ajax({
+                type : "get",
+                url : "getBulletinDetail.action?id="+id,
+                dataType : 'json',
+                success : function(result) {
+                    var bcontent=result.content;
+                    var date=result.createtime;
+                    layer.open({
+                        type: 1
+                        ,title: "详情" //标题栏
+                        ,closeBtn: false
+                        ,area: '400px;'
+                        ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
+                        ,btn: ['知道了']
+                        ,btnAlign: 'c'
+                        ,moveType: 1 //拖拽模式，0或者1
+                        ,content: '<div style="word-break:break-all; overflow:auto; padding: 50px; line-height: 22px; background-color: #89bdb4; color: #fff; font-weight: 300;">'+bcontent+'</div>'
+                        ,success: function(layero){
+                            var btn = layero.find('.layui-layer-btn');
+                        }
+                    });
+                },
+                error : function() {
+                    alert("请求bulletin失败");
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

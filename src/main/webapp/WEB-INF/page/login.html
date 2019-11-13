@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UISys | 同校活动互动吧</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+
+    <link rel="stylesheet" href="./static/css/font.css">
+    <link rel="stylesheet" href="./static/css/xadmin.css">
+    <link rel="stylesheet" href="./static/css/bootstrap.css">
+    <script type="text/javascript" src="./static/js/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="./static/lib/layui/layui.js"></script>
+    <script type="text/javascript" src="./static/js/xadmin.js"></script>
+
+</head>
+<body class="login-bg">
+<div class="login layui-anim layui-anim-up layui-form">
+    <div class="message">同校活动互动吧&nbsp;&nbsp;|&nbsp;&nbsp;登录</div>
+    <div id="darkbannerwrap"></div>
+    <form method="post">
+        <input id="id" name="id" placeholder="学号" type="text"  class="layui-input"><!--lay-verify="required"-->
+        <hr class="hr15" style="background-color: white">
+        <input id="password" name="password"  placeholder="密码" type="password" class="layui-input">
+        <hr class="hr15"style="background-color: white">
+        <input id="identifyingcode" name="identifyingcode"  placeholder="验证码" type="text"
+               style="width:30%;margin-right: 20px">
+        <a href="javascript:void(0);" onclick="VerificationCode();">
+            <img id="captchaImage" src="./changeCode.action" style="height: 48px;width: 120px;"/>
+            点击更换
+        </a>
+        <hr class="hr15"style="background-color: white">
+    </form>
+    <input value="登录" style="width:100%;" type="submit" onclick="login()">
+    <hr class="hr15"style="background-color: white">
+    <div id="login-extra">
+        <p>还没有注册？
+            <a href="./toPage.action?url=register.html">注册</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    // 更换验证码
+    function VerificationCode() {
+        $("#captchaImage").attr("src", "./changeCode.action?timestamp=" + (new Date()).valueOf());
+    }
+
+    function login() {
+        var id = $("#id").val();
+        var password = $("#password").val();
+        var identifyingcode = $("#identifyingcode").val()
+
+        if (id == ""){
+            layer.msg("学号不能为空", {time: 2000, icon:5,anim: 6})
+            id.face()
+            return false;
+        }
+        if (password == ""){
+            layer.msg("密码不能为空", {time: 2000, icon:5,anim: 6})
+            password.face()
+            return false;
+        }
+        if (identifyingcode == ""){
+            layer.msg("验证码不能为空", {time: 2000, icon:5,anim: 6})
+            identifyingcode.face()
+            return false;
+        }
+
+        //这是使用ajax的方式提交
+        $.ajax({
+            type: 'post',
+            url: 'userLogin.action',
+            data: {
+                'id': id,
+                'password': password,
+                'identifyingcode': identifyingcode
+            },
+            dataType: 'json',
+            success: function (data) {
+                var code = data.status;
+                if (code == "0") {
+                    layer.msg(data.msg, {time: 2000, icon:2,anim: 6});
+                    $("#captchaImage").attr("src", "changeCode.action?timestamp=" + (new Date()).valueOf());
+                    $("#identifyingcode").val("").focus(); // 清空并获得焦点
+                } else if (code == "200") {
+                    layer.msg(data.msg, {time: 2000, icon:1,anim: 6});
+                    window.location.href = data.url;
+                } else if (code == "500") {
+                    layer.msg(data.msg, {time: 2000, icon:2,anim: 6});
+                    $("#password").val("").focus(); // 清空并获得焦点
+                    $("#identifyingcode").val(""); // 清空
+                    $("#captchaImage").attr("src", "changeCode.action?timestamp=" + (new Date()).valueOf());
+                }
+            }
+        });
+    }
+    //登录按钮关联回车键
+    document.onkeydown = function(event) {
+        var e = event || window.event || arguments.callee.caller.arguments[0];
+        if (e && e.keyCode == 13) {
+// 按下enter 键 要做的事情
+            login();
+        }
+    };
+</script>
+</body>
+</html>
